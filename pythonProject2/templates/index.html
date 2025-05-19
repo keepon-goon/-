@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='Bootstrap/css/bootstrap.min.css') }}">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <title>云智教析---课程达成度数据可视化平台</title>
+    <style>
+        img {
+            max-width: 45%;
+            height: auto; /* 自动计算元素的高度 */
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .title {
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <h1 class="title">云智教析---课程达成度数据可视化平台</h1>
+    <ul class="nav">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">快速入门</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="#">数据excel表</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">数据分析图</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">未来课程达成度预测</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">与我们一起合作</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="#">关于</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" href="#">更多功能敬请期待</a>
+        </li>
+    </ul>
+</nav>
+<div class="container-fluid"> <!-- 使用container-fluid铺满整个宽度 -->
+    <div class="row g-0"> <!-- 添加g-0移除列间距 -->
+        <!-- 左侧内容区 - 占9列（3/4宽度） -->
+        <div class="col-lg-9 px-0"> <!-- 添加px-0移除左右内边距 -->
+            <!-- 图片显示区域 -->
+            <div class="bg-white p-4"> <!-- 添加内边距仅用于内容区域 -->
+                <div class="d-flex justify-content-between mb-2">
+                    <a href="?index={{ prev_index }}">上一张</a>
+                    <span>{{ current_image_index + 1 }} / {{ total_images }}</span>
+                    <a href="?index={{ next_index }}">下一张</a>
+                </div>
+                <img src="{{ url_for('serve_uploaded_file', filename=current_image) }}"
+                     alt="{{ current_image }}" class="w-100 rounded shadow">
+                <!-- 使用w-100使图片宽度100% -->
+                <h3 class="mt-3">{{ current_image }}</h3>
+            </div>
+
+            <!-- 文本输入区域 -->
+            <div class="p-4"> <!-- 添加内边距 -->
+                <div class="input-group input-group-lg">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"
+                              id="inputGroup-sizing-lg">请您输入分析内容，稍后将为您生成分析的Word文档</span>
+                    </div>
+                    <input type="text"
+                           id="userText"
+                           class="form-control"
+                           aria-label="Large"
+                           aria-describedby="inputGroup-sizing-lg">
+                </div>
+                <button id="saveBtn" type="button" class="btn btn-primary mt-3">
+                    保存分析文本
+                </button>
+            </div>
+        </div>
+
+        <!-- 右侧区域 - 占3列（1/4宽度） -->
+        <div class="col-lg-3 p-4"> <!-- 保持右侧内边距 -->
+            <div class="bg-light rounded shadow p-4 h-100">
+                <h3 class="text-primary">课程分析助手</h3>
+                <ul class="list-group mt-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        平均达成度
+                        <span class="badge bg-primary rounded-pill">86%</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        待改进目标
+                        <span class="badge bg-warning rounded-pill">3个</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        优秀率
+                        <span class="badge bg-success rounded-pill">72%</span>
+                    </li>
+                </ul>
+                <button class="btn btn-outline-primary w-100 mt-4">
+                    <i class="fas fa-download mr-2"></i> 导出详细报告
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='Bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+    document.getElementById('saveBtn').addEventListener('click', function () {
+        fetch('/save_text', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                text: document.getElementById('userText').value,
+                image_filename: "{{ current_image }}"
+            })
+        })
+            .then(response => response.json())
+            .then(data => alert(data.message));
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Bootstrap/css/bootstrap.min.css') }}">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <title>课程达成度数据可视化平台</title>
+    <style>
+        img {
+            max-width: 45%;
+            height: auto; /* 自动计算元素的高度 */
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #007BFF;
+            color: white;
+        }
+        .title{
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <h1 class="title">课程达成度数据可视化平台</h1>
+    <ul class="nav">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">快速入门</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="#">数据excel表</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">数据分析图</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">未来课程达成度预测</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="#">关于</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" href="#">更多功能敬请期待</a>
+        </li>
+    </ul>
+</nav>
+
+
+
+<!-- 图片显示区域 -->
+<div>
+    <a href="?index={{ prev_index }}">上一张</a>
+    {{ current_image_index + 1 }} / {{ total_images }}
+    <a href="?index={{ next_index }}">下一张</a>
+    <img src="{{ url_for('serve_uploaded_file', filename=current_image) }}" alt="{{ current_image }}">
+    <h3>{{ current_image }}</h3>
+</div>
+
+<!-- 文本输入区域 -->
+<div class="input-group input-group-lg">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="inputGroup-sizing-lg">请您输入分析内容，稍后将为您生成分析的Word文档</span>
+    </div>
+    <input type="text"
+           class="form-control"
+           aria-label="Large"
+           aria-describedby="inputGroup-sizing-lg">
+</div>
+<button id="saveBtn" type="button" class="btn btn-primary">保存分析文本</button>
+
+
+
+
+<script src="{{ url_for('static', filename='Bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        fetch('/save_text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: document.getElementById('userText').value,
+                image_filename: "{{ current_image }}"
+            })
+        })
+            .then(response => response.json())
+            .then(data => alert(data.message));
+    });
+</script>
+</body>
+</html>

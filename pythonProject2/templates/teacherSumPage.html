@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师教学辅助系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <!-- 配置Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#0FC6C2',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        info: '#86909C'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .hover-scale {
+                transition: transform 0.2s ease-in-out;
+            }
+            .hover-scale:hover {
+                transform: scale(1.02);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter">
+<!-- 导航栏 -->
+<nav class="bg-white shadow-md fixed w-full z-10 transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fa fa-graduation-cap text-primary text-2xl"></i>
+            <h1 class="text-xl font-bold text-gray-800">教师教学辅助系统</h1>
+        </div>
+
+        <!-- 桌面导航 -->
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="#" class="text-primary font-medium hover:text-primary/80 transition-colors">首页</a>
+            <a href="{{ url_for('teacher.lessonPrepare') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">备课</a>
+            <a href="{{ url_for('teacher.teacherExam') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">考核</a>
+            <a href="{{ url_for('teacher.teacherAnalyse') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">学情分析</a>
+            <a href="{{ url_for('teacher.systemAdministration') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">系统管理</a>
+        </div>
+
+        <!-- 用户信息 -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden md:block text-right">
+                <p class="text-sm font-medium text-gray-700">{{ session.get('username','未登录用户')}}</p>
+                <p class="text-xs text-gray-500">{{ session.get('role','未选择身份')}}</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <i class="fa fa-user"></i>
+            </div>
+            <button class="md:hidden text-gray-600">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- 主内容区 -->
+<main class="container mx-auto px-4 pt-24 pb-12">
+    <!-- 欢迎信息 -->
+    <div class="mb-8">
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">欢迎回来，{{ session.get('username','未登录用户')}}</h2>
+        <p class="text-gray-600 mt-2">今天是 <span id="current-date"></span>，你有 <span class="text-primary font-medium">3 项</span> 待处理任务</p>
+    </div>
+
+    <!-- 数据概览卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 card-shadow hover-scale">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">本周备课</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-1">12</h3>
+                    <p class="text-success text-sm flex items-center mt-2">
+                        <i class="fa fa-arrow-up mr-1"></i> 较上周 +2
+                    </p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <i class="fa fa-book text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 card-shadow hover-scale">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">已发布考核</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-1">5</h3>
+                    <p class="text-success text-sm flex items-center mt-2">
+                        <i class="fa fa-arrow-up mr-1"></i> 较上周 +1
+                    </p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                    <i class="fa fa-check-square-o text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 card-shadow hover-scale">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">学生提交率</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-1">87%</h3>
+                    <p class="text-danger text-sm flex items-center mt-2">
+                        <i class="fa fa-arrow-down mr-1"></i> 较上周 -3%
+                    </p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+                    <i class="fa fa-users text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 card-shadow hover-scale">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">平均正确率</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-1">65%</h3>
+                    <p class="text-success text-sm flex items-center mt-2">
+                        <i class="fa fa-arrow-up mr-1"></i> 较上周 +5%
+                    </p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-info/10 flex items-center justify-center text-info">
+                    <i class="fa fa-line-chart text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 功能模块 -->
+    <h3 class="text-xl font-bold text-gray-800 mb-6">快速开始</h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- 备课模块 -->
+        <div class="bg-white rounded-xl overflow-hidden card-shadow hover-scale">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fa fa-file-text-o"></i>
+                    </div>
+                    <h4 class="ml-3 text-lg font-bold text-gray-800">备课管理</h4>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">创建和管理课程备课内容，支持智能生成和历史版本管理</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                        <i class="fa fa-plus mr-1"></i> 新建备课
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-list mr-1"></i> 查看历史
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 考核模块 -->
+        <div class="bg-white rounded-xl overflow-hidden card-shadow hover-scale">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                        <i class="fa fa-clipboard"></i>
+                    </div>
+                    <h4 class="ml-3 text-lg font-bold text-gray-800">考核管理</h4>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">创建考核题目，设置评分标准，一键生成试卷并发布给学生</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-medium hover:bg-secondary/90 transition-colors">
+                        <i class="fa fa-plus mr-1"></i> 新建考核
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-list mr-1"></i> 已发布
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 学情分析模块 -->
+        <div class="bg-white rounded-xl overflow-hidden card-shadow hover-scale">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+                        <i class="fa fa-bar-chart"></i>
+                    </div>
+                    <h4 class="ml-3 text-lg font-bold text-gray-800">学情分析</h4>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">分析学生答题数据，生成个性化学习报告，发现学生薄弱环节</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="px-4 py-2 bg-warning text-white rounded-lg text-sm font-medium hover:bg-warning/90 transition-colors">
+                        <i class="fa fa-search mr-1"></i> 查看分析
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-refresh mr-1"></i> 刷新数据
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据可视化 -->
+    <h3 class="text-xl font-bold text-gray-800 mb-6">学情数据</h3>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 card-shadow lg:col-span-2">
+            <h4 class="text-lg font-bold text-gray-800 mb-4">班级正确率趋势</h4>
+            <div class="h-64">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 card-shadow">
+            <h4 class="text-lg font-bold text-gray-800 mb-4">知识点掌握情况</h4>
+            <div class="h-64">
+                <canvas id="knowledgeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近活动 -->
+    <h3 class="text-xl font-bold text-gray-800 mb-6">最近活动</h3>
+
+    <div class="bg-white rounded-xl p-6 card-shadow">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 px-4 text-gray-500 font-medium text-sm">活动类型</th>
+                    <th class="text-left py-3 px-4 text-gray-500 font-medium text-sm">内容</th>
+                    <th class="text-left py-3 px-4 text-gray-500 font-medium text-sm">时间</th>
+                    <th class="text-left py-3 px-4 text-gray-500 font-medium text-sm">状态</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-file-text-o"></i>
+                            </div>
+                            <span class="ml-2 text-sm font-medium text-gray-800">备课完成</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">
+                        <span class="font-medium">《数组》单元备课</span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-500">今天 10:23</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">已完成</span>
+                    </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary">
+                                <i class="fa fa-check-square-o"></i>
+                            </div>
+                            <span class="ml-2 text-sm font-medium text-gray-800">考核发布</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">
+                        <span class="font-medium">《函数》单元测试</span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-500">昨天 16:45</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 bg-warning/10 text-warning text-xs rounded-full">进行中</span>
+                    </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded bg-warning/10 flex items-center justify-center text-warning">
+                                <i class="fa fa-bar-chart"></i>
+                            </div>
+                            <span class="ml-2 text-sm font-medium text-gray-800">学情分析</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">
+                        <span class="font-medium">《继承和多态》章节分析报告</span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-500">昨天 09:12</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">已完成</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 py-6">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <p class="text-gray-500 text-sm">© 2025 教师教学辅助系统. 保留所有权利.</p>
+            </div>
+            <div class="flex space-x-6">
+                <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                    <i class="fa fa-question-circle"></i> 帮助中心
+                </a>
+                <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                    <i class="fa fa-envelope"></i> 联系我们
+                </a>
+                <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                    <i class="fa fa-shield"></i> 隐私政策
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+    // 设置当前日期
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', options);
+
+        // 导航栏滚动效果
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 10) {
+                navbar.classList.add('py-2');
+                navbar.classList.add('shadow-lg');
+            } else {
+                navbar.classList.remove('py-2');
+                navbar.classList.remove('shadow-lg');
+            }
+        });
+
+        // 初始化图表
+        initCharts();
+    });
+
+    // 图表初始化
+    function initCharts() {
+        // 班级正确率趋势图
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(performanceCtx, {
+            type: 'line',
+            data: {
+                labels: ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周'],
+                datasets: [{
+                    label: '平均正确率',
+                    data: [55, 59, 62, 58, 65, 68],
+                    borderColor: '#165DFF',
+                    backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 知识点掌握情况
+        const knowledgeCtx = document.getElementById('knowledgeChart').getContext('2d');
+        new Chart(knowledgeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['掌握良好', '基本掌握', '需要加强'],
+                datasets: [{
+                    data: [45, 35, 20],
+                    backgroundColor: ['#00B42A', '#FF7D00', '#F53F3F'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+</script>
+</body>
+</html>

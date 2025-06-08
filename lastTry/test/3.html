@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>教师备课系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#FF4D4F',
+                        info: '#1890FF',
+                        dark: '#1F2937',
+                        light: '#F9FAFB',
+                        model1: '#7B61FF', // 模型1颜色
+                        model2: '#FF7D00', // 模型2颜色
+                        model3: '#00B42A', // 模型3颜色
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+            }
+            .form-focus {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all;
+            }
+            .upload-drag-hover {
+                @apply border-primary bg-primary/5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter text-gray-800 min-h-screen">
+<!-- 顶部导航 -->
+<header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fa fa-book text-primary text-2xl"></i>
+            <h1 class="text-xl font-bold text-dark">教师备课系统</h1>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">首页</a>
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">课程管理</a>
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">学情分析</a>
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">资源库</a>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <i class="fa fa-search text-gray-400"></i>
+          </span>
+                <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none form-focus text-sm w-40 md:w-60">
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <i class="fa fa-user"></i>
+                </div>
+                <span class="hidden md:inline text-sm font-medium">{{ session.get('username','未登录用户')}}老师</span>
+                <i class="fa fa-angle-down text-gray-500"></i>
+            </div>
+
+            <button class="md:hidden text-gray-600">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- 主内容区 -->
+<main class="container mx-auto px-4 py-6">
+    <!-- 面包屑导航 -->
+    <div class="flex items-center text-sm text-gray-500 mb-6">
+        <a href="#" class="hover:text-primary">首页</a>
+        <i class="fa fa-angle-right mx-2 text-xs"></i>
+        <span class="text-gray-700">备课中心</span>
+    </div>
+
+    <!-- 欢迎信息 -->
+    <div class="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-6 mb-8">
+        <h2 class="text-2xl font-bold text-dark mb-2">欢迎回来，{{ session.get('username','未登录用户')}}老师</h2>
+        <p class="text-gray-600">今天是 <span id="current-date">2025年6月6日</span>，您有 <span class="text-primary font-medium">3</span> 个课程需要备课</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-file-text-o text-primary"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">待备课</h3>
+                        <p class="text-2xl font-bold">3</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-check-circle-o text-success"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">已完成</h3>
+                        <p class="text-2xl font-bold">12</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-calendar-o text-warning"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">今日课程</h3>
+                        <p class="text-2xl font-bold">2</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 大模型选择区 -->
+    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold flex items-center">
+                <i class="fa fa-microchip text-primary mr-2"></i>
+                选择大模型
+            </h3>
+            <button class="text-sm text-primary hover:text-primary/80 transition-colors" id="manage-models-btn">
+                <i class="fa fa-cog"></i> 管理模型
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors" data-model="spark">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-model1/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-bolt text-model1"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium">星火大模型</h4>
+                        <p class="text-xs text-gray-500">毫秒级响应 · 高性能</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center model-selected-indicator hidden">
+                    <span class="text-xs text-gray-500">当前选择</span>
+                    <i class="fa fa-check-circle text-primary"></i>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors model-active" data-model="deepseek-r1">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-model2/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-paw text-model2"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium">deepseek-r1</h4>
+                        <p class="text-xs text-gray-500">本地部署 · 支持自定义向量知识库</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center model-selected-indicator">
+                    <span class="text-xs text-gray-500">当前选择</span>
+                    <i class="fa fa-check-circle text-primary"></i>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors" data-model="qwen3">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-model3/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-leaf text-model3"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium">Qwen3</h4>
+                        <p class="text-xs text-gray-500">中文更友好 · 专属风格</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center model-selected-indicator hidden">
+                    <span class="text-xs text-gray-500">当前选择</span>
+                    <i class="fa fa-check-circle text-primary"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 bg-gray-50 p-3 rounded-lg">
+            <div class="flex items-center text-sm">
+                <i class="fa fa-info-circle text-primary mr-2"></i>
+                <span>选择不同的大模型会影响内容生成的风格和速度。您可以在 <a href="#models" class="text-primary hover:underline">模型管理</a> 中添加更多模型。</span>
+            </div>
+        </div>
+    </div>
+    <!-- 备课工作区 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 左侧：课程大纲 -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- 课程大纲上传 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-upload text-primary mr-2"></i>
+                        课程大纲上传与解析
+                    </h3>
+                    <button class="text-sm text-primary hover:text-primary/80 transition-colors">
+                        <i class="fa fa-question-circle"></i> 帮助
+                    </button>
+                </div>
+
+                <p class="text-gray-500 text-sm mb-4">支持上传本地课程大纲（Word/PDF/PPT），系统将自动解析知识点</p>
+
+                <!-- 文件上传区域 -->
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer" id="upload-area">
+                    <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-600 mb-1">点击或拖拽文件到此处上传</p>
+                    <p class="text-xs text-gray-500" id="upload-file-types">支持 .docx, .pdf 文件（最大 10MB）</p>
+                    <input type="file" id="outline-file" class="hidden" accept=".docx,.pdf,.txt">
+                </div>
+
+                <!-- 添加上传进度条 -->
+                <div id="upload-progress" class="mt-4 hidden bg-gray-100 rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm text-gray-600">上传进度</span>
+                        <span class="text-sm font-medium" id="upload-percentage">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div id="progress-bar" class="bg-primary h-1.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4" id="大纲内容-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-medium">解析结果（可编辑）</label>
+                        <span class="text-xs text-gray-500">上次更新: <span id="update-time">17:48:11</span></span>
+                    </div>
+                    <textarea class="w-full p-3 border border-gray-300 rounded-lg form-focus" rows="5" id="outline-content">
+
+请先上传文件，成功上传后再点击智能备课即可生成课程大纲</textarea>
+                </div>
+
+                <div class="mt-4 flex justify-between">
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors btn-hover" id="save-outline">
+                        <i class="fa fa-save mr-1"></i> 保存大纲
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors btn-hover" id="generate-lesson">
+                        <i class="fa fa-magic mr-1"></i> 智能生成备课内容
+                    </button>
+                </div>
+            </div>
+
+            <!-- 智能备课内容 -->
+            <div class="bg-white rounded-xl p-6 card-shadow" id="备课内容-container">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-lightbulb-o text-primary mr-2"></i>
+                        智能生成备课内容
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button class="text-sm text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-edit"></i> 编辑
+                        </button>
+                        <button class="text-sm text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-share-alt"></i> 分享
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 知识讲解区域 -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">知识讲解</label>
+                        <div class="border border-gray-300 rounded-lg overflow-hidden" onclick="openKnowledgeEditModal()">
+                            <div class="bg-gray-50 p-2 border-b border-gray-300">
+                                <div class="flex space-x-2">
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-link"></i></button>
+                                </div>
+                            </div>
+                            <textarea class="w-full p-3 border-0 focus:ring-0" rows="3" id="知识讲解" readonly>【知识讲解】
+
+1. 函数式编程基础概念
+   - 纯函数：相同输入总是返回相同输出，不产生副作用
+   - 不可变数据：避免数据被修改，提高代码安全性
+   - 一等公民函数：函数可以作为参数传递、返回值返回
+
+2. 高阶函数的使用
+   - 接收一个或多个函数作为参数
+   - 返回一个函数
+   - 常见高阶函数：sorted, filter, map
+
+3. 常用函数式编程工具
+   - map(func, iterable)：对可迭代对象中的每个元素应用函数
+   - filter(func, iterable)：过滤可迭代对象中的元素
+   - reduce(func, iterable[, initial])：累积计算可迭代对象中的元素</textarea>
+                        </div>
+                    </div>
+
+                    <!-- 新增知识讲解编辑弹窗 -->
+                    <div id="knowledge-edit-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-100 hidden">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-6xl mx-4 transform transition-all scale-95">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-2xl font-bold">编辑知识讲解</h3>
+                                <button class="text-gray-500 hover:text-gray-700" onclick="closeKnowledgeEditModal()">
+                                    <i class="fa fa-times text-2xl"></i>
+                                </button>
+                            </div>
+                            <form id="knowledge-edit-form">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium mb-1">知识讲解内容</label>
+                                    <textarea class="w-full p-3 border border-gray-300 rounded-lg form-focus" rows="25" id="knowledge-full-content" name="knowledge-full-content"></textarea>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="button" class="px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-400 mr-2" onclick="closeKnowledgeEditModal()">取消</button>
+                                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90" onclick="saveKnowledgeChanges()">保存修改</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- 在实训练习区域的题目容器外包裹可点击的div -->
+                    <label class="block text-sm font-medium mb-1">配套实例训练</label>
+                    <div class="question-container" data-question-type="选择题" data-question-index="1">
+                        <div class="border border-gray-300 rounded-lg overflow-hidden mb-4" onclick="openEditModal(this)">
+                            <!-- 题目内容保持不变 -->
+                            <div class="bg-gray-50 p-2 border-b border-gray-300">
+                                <div class="flex space-x-2">
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-link"></i></button>
+                                </div>
+                            </div>
+                            <textarea class="w-full p-3 border-0 focus:ring-0" rows="3" readonly>
+选择题
+1. 关于Python装饰器的描述，错误的是：
+   A) 装饰器本质是一个函数
+   B) 可以使用`@`语法糖简化装饰器调用
+   C) 装饰器只能用于修饰函数，不能修饰类
+   D) 装饰器可以在不修改原函数代码的情况下扩展其功能
+
+2. 以下哪个不是Python中生成器（Generator）的特点？
+   A) 生成器使用`yield`关键字返回值
+   B) 生成器是一种惰性计算的迭代器
+   C) 生成器会一次性将所有结果加载到内存中
+   D) 生成器可以通过`next()`函数逐个获取值
+
+3. 在Python中，以下哪个操作会改变列表的原始内容？
+   A) `sorted(my_list)`
+   B) `my_list.sort()`
+   C) `my_list + [1]`
+   D) `list(reversed(my_list))`
+
+4. 以下代码的输出结果是：
+   def outer():
+       x = 10
+       def inner():
+           nonlocal x
+           x += 5
+           return x
+       return inner
+
+   func = outer()
+   print(func())
+   print(func())
+   A) 10, 15
+   B) 15, 20
+   C) 15, 15
+   D) 报错：x未定义
+
+5. 关于Python的多线程和多进程，正确的是：
+   A) 多线程适合CPU密集型任务
+   B) 多进程适合IO密集型任务
+   C) 多线程受GIL限制，无法真正并行执行
+   D) 多进程比多线程消耗的系统资源更少
+
+编程填空题
+1. 补全代码：实现一个递归函数计算斐波那契数列
+   def fibonacci(n):
+       if n <= 1:
+           return n
+       else:
+           return ______________
+
+2. 补全代码：使用列表推导式生成1到10的平方数列表
+   squares = [__________ for __________ in __________]
+
+
+编程题
+编写一个函数，实现对字符串列表的分组统计：
+- 输入：一个字符串列表，例如`["apple", "banana", "avocado", "cherry"]`
+- 输出：一个字典，键为字符串的首字母，值为该字母开头的字符串列表。
+  示例输出：`{'a': ['apple', 'avocado'], 'b': ['banana'], 'c': ['cherry']}`
+- 要求：忽略字符串大小写，且结果字典按键的升序排列。</textarea>
+                        </div>
+                    </div>
+                    <!-- 添加题目编辑弹窗 -->
+                    <div id="edit-question-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-100 hidden">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-6xl mx-4 transform transition-all scale-95">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-2xl font-bold">编辑题目</h3>
+                                <button class="text-gray-500 hover:text-gray-700" onclick="closeEditModal()">
+                                    <i class="fa fa-times text-2xl"></i>
+                                </button>
+                            </div>
+                            <form id="question-edit-form">
+                                <input type="hidden" id="question-type" name="question-type">
+                                <input type="hidden" id="question-index" name="question-index">
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium mb-1">完整题目内容</label>
+                                    <textarea class="w-full p-3 border border-gray-300 rounded-lg form-focus" rows="25" id="question-full-content" name="question-full-content"></textarea>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="button" class="px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-400 mr-2" onclick="closeEditModal()">取消</button>
+                                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90" onclick="saveQuestionChanges()">保存修改</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- 修改后的题目弹窗 -->
+                    <div id="question-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-100 hidden">
+                        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 transform transition-all scale-95">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-2xl font-bold">所有训练题目</h3>
+                                <button class="text-gray-500 hover:text-gray-700" onclick="closeQuestionModal()">
+                                    <i class="fa fa-times text-2xl"></i>
+                                </button>
+                            </div>
+                            <div id="question-content" class="max-h-[80vh] overflow-y-auto text-gray-700 space-y-4 pb-2">
+                                <!-- 题目内容将动态填充这里 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        // 修改后的题目弹窗功能
+                        document.getElementById('view-all-questions').addEventListener('click', function() {
+                            const questions = document.getElementById('实训练习').value;
+
+                            // 处理题目内容，保留原有格式并添加更好的分隔
+                            const content = questions
+                                .split('\n')
+                                .map(line => {
+                                    // 处理题号，添加更好的样式
+                                    if (/^\d+\./.test(line)) {
+                                        return `<div class="border-b border-gray-200 pb-2 mb-2">
+                           <div class="font-medium text-lg">${line}</div>
+                       </div>`;
+                                    }
+                                    return `<p class="ml-4 mb-1">${line}</p>`;
+                                })
+                                .join('');
+
+                            document.getElementById('question-content').innerHTML = content;
+                            document.getElementById('question-modal').classList.remove('hidden');
+
+                            // 平滑滚动到顶部
+                            document.getElementById('question-content').scrollTop = 0;
+                        });
+                    </script>
+
+                    <div class="flex items-center">
+                        <div class="w-1/3">
+                            <label class="block text-sm font-medium mb-1">时间分配（分钟）</label>
+                            <input type="number" class="w-full p-3 border border-gray-300 rounded-lg form-focus" id="时间分配" value="90">
+                        </div>
+                        <div class="w-2/3 ml-4">
+                            <label class="block text-sm font-medium mb-1">时间轴预览</label>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" id="时间轴" style="width: 50%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0分钟</span>
+                                <span>90分钟</span>
+                                <span>180分钟</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 在智能生成备课内容区域添加下载按钮 -->
+                    <div class="mt-4 flex justify-between">
+                        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors btn-hover" id="generate-content">
+                            <i class="fa fa-magic mr-1"></i> 智能生成备课内容
+                        </button>
+                        <!-- 新增下载按钮 -->
+                        <button class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors btn-hover" id="download-btn">
+                            <i class="fa fa-download mr-1"></i> 下载备课内容
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 考核内容生成 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-question-circle text-primary mr-2"></i>
+                        考核内容生成
+                    </h3>
+                    <button class="text-sm text-primary hover:text-primary/80 transition-colors">
+                        <i class="fa fa-cog"></i> 设置
+                    </button>
+                </div>
+
+                <p class="text-gray-500 text-sm mb-4">根据教学内容自动生成考核题目（支持编程题/选择题）</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">题目类型</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg form-focus" id="考核类型">
+                            <option value="编程题">编程题（含测试用例）</option>
+                            <option value="选择题">选择题（含答案解析）</option>
+                            <option value="填空题">填空题</option>
+                            <option value="简答题">简答题</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">难度级别</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg form-focus">
+                            <option value="初级">初级</option>
+                            <option value="中级" selected>中级</option>
+                            <option value="高级">高级</option>
+                            <option value="混合">混合难度</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">题目数量</label>
+                    <div class="flex items-center">
+                        <button class="w-10 h-10 border border-gray-300 rounded-l-lg flex items-center justify-center hover:bg-gray-50 transition-colors" id="decrease-count">-</button>
+                        <input type="number" id="题目数量" value="5" class="w-16 h-10 border-y border-gray-300 text-center">
+                        <button class="w-10 h-10 border border-gray-300 rounded-r-lg flex items-center justify-center hover:bg-gray-50 transition-colors" id="increase-count">+</button>
+                    </div>
+                </div>
+
+                <button class="w-full py-3 bg-info text-white rounded-lg hover:bg-info/90 transition-colors btn-hover" id="generate-exam">
+                    <i class="fa fa-refresh mr-1"></i> 生成考核题目
+                </button>
+
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg" id="考核题目-container">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium">生成的题目</h4>
+                        <div class="flex space-x-2">
+                            <button class="text-xs text-gray-500 hover:text-primary transition-colors" id="copy-exam">
+                                <i class="fa fa-copy"></i> 复制
+                            </button>
+                            <button class="text-xs text-gray-500 hover:text-primary transition-colors">
+                                <i class="fa fa-edit"></i> 编辑
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4" id="考核题目列表">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <div class="flex items-start">
+                                <span class="font-medium mr-2">1.</span>
+                                <div>实现一个函数，判断一个字符串是否是回文。</div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-600">
+                                <div class="font-medium">测试用例:</div>
+                                <pre class="bg-gray-50 p-2 rounded mt-1 text-xs">输入："radar" → 输出：true
+输入："hello" → 输出：false
+输入："A man, a plan, a canal: Panama" → 输出：true</pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <div class="flex items-start">
+                                <span class="font-medium mr-2">2.</span>
+                                <div>编写一个程序，计算斐波那契数列的第n项。</div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-600">
+                                <div class="font-medium">测试用例:</div>
+                                <pre class="bg-gray-50 p-2 rounded mt-1 text-xs">输入：5 → 输出：5
+输入：10 → 输出：55
+输入：0 → 输出：0</pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <div class="flex items-start">
+                                <span class="font-medium mr-2">3.</span>
+                                <div>设计一个栈结构，支持push、pop和getMin操作，且所有操作的时间复杂度为O(1)。</div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-600">
+                                <div class="font-medium">测试用例:</div>
+                                <pre class="bg-gray-50 p-2 rounded mt-1 text-xs">执行push(3), push(1), push(2), getMin() → 输出：1
+执行pop(), getMin() → 输出：1
+执行pop(), getMin() → 输出：3</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 知识库卡片 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-book text-primary mr-2"></i>
+                        知识库
+                    </h3>
+                    <a href="#knowledge" class="text-sm text-primary hover:text-primary/80 transition-colors">
+                        查看全部
+                    </a>
+                </div>
+
+                <p class="text-gray-500 text-sm mb-4">基于您的教学内容构建的专属知识库，向量化知识库，教学更加高效</p>
+
+                <div class="space-y-3">
+                    <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-file-text-o text-primary"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-sm">Python函数式编程基础</h4>
+                            <p class="text-xs text-gray-500">12个知识点 · 上次更新: 今天</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">已同步</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-file-text-o text-primary"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-sm">数据结构与算法</h4>
+                            <p class="text-xs text-gray-500">24个知识点 · 上次更新: 昨天</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">已同步</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                            <i class="fa fa-file-text-o text-primary"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-sm">Web开发基础</h4>
+                            <p class="text-xs text-gray-500">18个知识点 · 上次更新: 3天前</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">更新中</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full mt-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
+                    <i class="fa fa-plus mr-2"></i> 添加新知识库
+                </button>
+            </div>
+        </div>
+
+
+        <!-- 右侧：学情分析与辅助工具 -->
+        <div class="space-y-6">
+            <!-- 学情数据分析 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-bar-chart text-primary mr-2"></i>
+                        学情数据分析
+                    </h3>
+                    <select class="text-sm border border-gray-300 rounded-lg px-2 py-1">
+                        <option>最近一个月</option>
+                        <option>本学期</option>
+                        <option>全部</option>
+                    </select>
+                </div>
+
+                <p class="text-gray-500 text-sm mb-4">可视化分析学生答题数据，辅助备课决策</p>
+
+                <!-- 正确率趋势图 -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium mb-2">班级正确率趋势</h4>
+                    <div class="h-60">
+                        <canvas id="accuracyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 知识点掌握情况 -->
+                <div>
+                    <h4 class="text-sm font-medium mb-2">知识点掌握情况</h4>
+                    <div class="h-60">
+                        <canvas id="knowledgeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <div class="text-xs text-gray-500">平均正确率</div>
+                        <div class="text-xl font-bold">82.5%</div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <div class="text-xs text-gray-500">未掌握知识点</div>
+                        <div class="text-xl font-bold">3个</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 资源推荐 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-book text-primary mr-2"></i>
+                        推荐教学资源
+                    </h3>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80 transition-colors">查看更多</a>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-start p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer">
+                        <img src="https://picsum.photos/200/300?random=2" alt="教学视频" class="w-16 h-16 object-cover rounded mr-3">
+                        <div>
+                            <h4 class="font-medium text-sm">Python 函数式编程精讲</h4>
+                            <p class="text-xs text-gray-500 mt-1">12分钟视频 · 基础难度</p>
+                            <div class="flex items-center mt-1">
+                                <div class="flex text-yellow-400 text-xs">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-half-o"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">4.5 (128)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer">
+                        <img src="https://picsum.photos/200/300?random=3" alt="练习题集" class="w-16 h-16 object-cover rounded mr-3">
+                        <div>
+                            <h4 class="font-medium text-sm">数据结构与算法练习题集</h4>
+                            <p class="text-xs text-gray-500 mt-1">50道题目 · 中级难度</p>
+                            <div class="flex items-center mt-1">
+                                <div class="flex text-yellow-400 text-xs">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-o"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">4.0 (95)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer">
+                        <img src="https://picsum.photos/200/300?random=4" alt="教学课件" class="w-16 h-16 object-cover rounded mr-3">
+                        <div>
+                            <h4 class="font-medium text-sm">面向对象编程设计模式</h4>
+                            <p class="text-xs text-gray-500 mt-1">PPT课件 · 高级难度</p>
+                            <div class="flex items-center mt-1">
+                                <div class="flex text-yellow-400 text-xs">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">5.0 (76)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速操作 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-lg font-bold flex items-center mb-4">
+                    <i class="fa fa-cog text-primary mr-2"></i>
+                    快速操作
+                </h3>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-calendar-plus-o text-xl text-primary mb-2"></i>
+                        <span class="text-sm">添加课程</span>
+                    </button>
+
+                    <button class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-users text-xl text-primary mb-2"></i>
+                        <span class="text-sm">管理班级</span>
+                    </button>
+
+                    <button class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-file-pdf-o text-xl text-primary mb-2"></i>
+                        <span class="text-sm">导出教案</span>
+                    </button>
+
+                    <button class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-comments-o text-xl text-primary mb-2"></i>
+                        <span class="text-sm">在线交流</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 mt-12">
+    <div class="container mx-auto px-4 py-6">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="flex items-center">
+                    <i class="fa fa-book text-primary text-xl mr-2"></i>
+                    <span class="font-bold text-dark">教师备课系统</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">助力教师高效备课，提升教学质量</p>
+            </div>
+
+            <div class="flex space-x-6">
+                <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                    <i class="fa fa-question-circle"></i> 帮助中心
+                </a>
+                <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                    <i class="fa fa-file-text-o"></i> 使用指南
+                </a>
+                <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                    <i class="fa fa-envelope-o"></i> 联系我们
+                </a>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 mt-6 pt-6 text-center text-xs text-gray-500">
+            <p>© 2025 教师备课系统 版权所有</p>
+        </div>
+    </div>
+</footer>
+
+<!-- 模态框（示例） -->
+<div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">提示</h3>
+            <button class="text-gray-500 hover:text-gray-700" onclick="document.getElementById('modal').classList.add('hidden')">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <p class="text-gray-700 mb-4" id="modal-message">操作成功！</p>
+        <div class="flex justify-end">
+            <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors" onclick="document.getElementById('modal').classList.add('hidden')">
+                确定
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+
+    // 智能上传和解析按钮模块
+    const generateBtn = document.getElementById('generate-lesson');
+    const outlineContent = document.getElementById('outline-content');
+    const lessonContentContainer = document.getElementById('备课内容-container');
+
+    // 显示通知提示
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 transform translate-y-10 opacity-0 ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fa fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+        document.body.appendChild(notification);
+
+        // 触发动画
+        setTimeout(() => {
+            notification.classList.remove('translate-y-10', 'opacity-0');
+        }, 10);
+
+        // 3秒后隐藏
+        setTimeout(() => {
+            notification.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    // 大模型选择逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取所有模型卡片
+        const modelCards = document.querySelectorAll('[data-model]');
+
+        // 为每个模型卡片添加点击事件
+        modelCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // 移除所有卡片的选中状态
+                modelCards.forEach(c => {
+                    c.classList.remove('model-active', 'border-primary', 'bg-primary/5');
+                    c.classList.add('border-gray-200');
+
+                    // 隐藏所有选中指示器
+                    const indicator = c.querySelector('.model-selected-indicator');
+                    if (indicator) indicator.classList.add('hidden');
+                });
+
+                // 设置当前卡片为选中状态
+                this.classList.add('model-active', 'border-primary', 'bg-primary/5');
+                this.classList.remove('border-gray-200');
+
+                // 显示选中指示器
+                const indicator = this.querySelector('.model-selected-indicator');
+                if (indicator) indicator.classList.remove('hidden');
+
+                // 存储选中的模型到本地存储
+                localStorage.setItem('selectedModel', this.dataset.model);
+
+                // 显示选择成功的提示
+                showNotification(`已选择模型: ${this.querySelector('h4').textContent}`);
+            });
+        });
+
+        // 检查本地存储中是否有之前选择的模型
+        const savedModel = localStorage.getItem('selectedModel');
+        if (savedModel) {
+            const savedModelCard = document.querySelector(`[data-model="${savedModel}"]`);
+            if (savedModelCard) {
+                // 触发点击事件来选择之前保存的模型
+                savedModelCard.click();
+            }
+        }
+
+        // 如果生成按钮已定义，则添加模型参数
+        if (generateBtn) {
+            generateBtn.addEventListener('click', async () => {
+                try {
+                    // 显示加载状态
+                    generateBtn.disabled = true;
+                    generateBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> 生成中...';
+
+                    // 获取选中的模型
+                    const selectedModelCard = document.querySelector('.model-active');
+                    const selectedModel = selectedModelCard ? selectedModelCard.dataset.model : 'deepseek-r1';
+
+                    // 发送请求时携带模型参数
+                    const response = await fetch(`/teacher/parseResult?model=${encodeURIComponent(selectedModel)}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // 更新大纲内容
+                        outlineContent.value = data.content;
+
+                        // 如果有备课内容容器，显示它
+                        if (lessonContentContainer) {
+                            lessonContentContainer.style.display = 'block';
+                        }
+
+                        // 显示成功通知
+                        showNotification('备课内容已成功更新！');
+                    } else {
+                        console.error('生成失败:', data.error);
+                        showNotification(`生成失败: ${data.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('网络请求失败:', error);
+                    showNotification('网络请求失败，请稍后重试', 'error');
+                } finally {
+                    // 恢复按钮状态
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '<i class="fa fa-magic mr-1"></i> 智能生成备课内容';
+                }
+            });
+        }
+    });
+    // 设置当前日期
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', options);
+
+        // 初始化图表
+        initCharts();
+
+        // 设置时间轴预览
+        document.getElementById('时间分配').addEventListener('input', function() {
+            const timeValue = parseInt(this.value);
+            const percentage = (timeValue / 180) * 100;
+            document.getElementById('时间轴').style.width = `${percentage}%`;
+            document.querySelector('#备课内容-container .text-gray-500 span').textContent = `${timeValue}分钟`;
+        });
+
+        // 文件上传功能
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('outline-file');
+        const progressContainer = document.getElementById('upload-progress');
+        const progressBar = document.getElementById('progress-bar');
+        const uploadPercentage = document.getElementById('upload-percentage');
+
+        // 点击上传区域触发文件选择
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // 拖拽上传功能
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('upload-drag-hover');
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            this.classList.remove('upload-drag-hover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('upload-drag-hover');
+
+            if (e.dataTransfer.files.length) {
+                handleFileUpload(e.dataTransfer.files[0]);
+            }
+        });
+
+        // 文件选择变化时处理上传
+        fileInput.addEventListener('change', function() {
+            if (this.files.length) {
+                handleFileUpload(this.files[0]);
+            }
+        });
+
+        // 处理文件上传
+        function handleFileUpload(file) {
+            // 验证文件类型
+            const allowedTypes = ['.docx', '.pdf', '.txt'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+            if (!allowedTypes.includes(fileExtension)) {
+                alert('请上传 .docx, .pdf 或 .txt 格式的文件！');
+                return;
+            }
+
+            // 验证文件大小（10MB限制）
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                alert('文件大小超过10MB，请上传较小的文件！');
+                return;
+            }
+
+            // 显示进度条
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            uploadPercentage.textContent = '0%';
+
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 使用Fetch API上传文件，并显示进度
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/teacher/upload', true);
+
+            // 监听上传进度
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    uploadPercentage.textContent = percentComplete.toFixed(0) + '%';
+                }
+            });
+
+            // 上传完成
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // 模拟解析成功，实际项目中应根据后端返回结果处理
+                    setTimeout(() => {
+                        progressContainer.classList.add('hidden');
+                        document.getElementById('modal-message').textContent = '文件上传并解析成功！';
+                        document.getElementById('modal').classList.remove('hidden');
+
+                        // 更新大纲内容和时间
+                        document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
+                        document.getElementById('大纲内容').value = "已成功解析文件内容：\n\n" + file.name + "\n\n文件类型：" + file.type + "\n文件大小：" + (file.size / (1024 * 1024)).toFixed(2) + " MB\n\n解析时间：" + new Date().toLocaleString();
+                    }, 500);
+                } else {
+                    progressContainer.classList.add('hidden');
+                    alert('上传失败: ' + xhr.statusText);
+                }
+            };
+
+            // 上传错误
+            xhr.onerror = function() {
+                progressContainer.classList.add('hidden');
+                alert('上传过程中发生错误');
+            };
+
+            // 发送请求
+            xhr.send(formData);
+        }
+
+
+        // 题目数量增减按钮
+        document.getElementById('decrease-count').addEventListener('click', function() {
+            const countInput = document.getElementById('题目数量');
+            const currentValue = parseInt(countInput.value);
+            if (currentValue > 1) {
+                countInput.value = currentValue - 1;
+            }
+        });
+
+        document.getElementById('increase-count').addEventListener('click', function() {
+            const countInput = document.getElementById('题目数量');
+            const currentValue = parseInt(countInput.value);
+            if (currentValue < 10) {
+                countInput.value = currentValue + 1;
+            }
+        });
+
+        // 生成考核题目按钮
+        document.getElementById('generate-exam').addEventListener('click', function() {
+            // 显示加载状态
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40';
+            loadingIndicator.innerHTML = `
+                <div class="bg-white rounded-lg p-6 flex items-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mr-4"></div>
+                    <div>
+                        <h3 class="font-bold">正在生成考核题目</h3>
+                        <p class="text-gray-500 text-sm">根据备课内容，正在生成适合的考核题目...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingIndicator);
+
+            // 模拟API调用
+            setTimeout(() => {
+                const examType = document.getElementById('考核类型').value;
+                const examCount = document.getElementById('题目数量').value;
+
+                // 清空现有题目
+                const examList = document.getElementById('考核题目列表');
+                examList.innerHTML = '';
+
+                // 生成新题目
+                for (let i = 0; i < examCount; i++) {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'bg-white p-4 rounded-lg border border-gray-200';
+
+                    if (examType === '编程题') {
+                        questionDiv.innerHTML = `
+                            <div class="flex items-start">
+                                <span class="font-medium mr-2">${i+1}.</span>
+                                <div>编写一个函数，${getRandomProgrammingQuestion()}</div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-600">
+                                <div class="font-medium">测试用例:</div>
+                                <pre class="bg-gray-50 p-2 rounded mt-1 text-xs">${getRandomTestCases()}</pre>
+                            </div>
+                        `;
+                    } else {
+                        questionDiv.innerHTML = `
+                            <div class="flex items-start">
+                                <span class="font-medium mr-2">${i+1}.</span>
+                                <div>${getRandomMultipleChoiceQuestion()}</div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-600">
+                                <div class="font-medium">答案解析:</div>
+                                <p class="bg-gray-50 p-2 rounded mt-1">${getRandomAnswerExplanation()}</p>
+                            </div>
+                        `;
+                    }
+
+                    examList.appendChild(questionDiv);
+                }
+
+                document.body.removeChild(loadingIndicator);
+                document.getElementById('modal-message').textContent = '考核题目生成成功！';
+                document.getElementById('modal').classList.remove('hidden');
+            }, 2000);
+        });
+
+        // 复制考核题目
+        document.getElementById('copy-exam').addEventListener('click', function() {
+            const examQuestions = document.getElementById('考核题目列表').innerText;
+            navigator.clipboard.writeText(examQuestions).then(function() {
+                document.getElementById('modal-message').textContent = '题目已复制到剪贴板！';
+                document.getElementById('modal').classList.remove('hidden');
+            }).catch(function(err) {
+                alert('复制失败，请手动复制');
+            });
+        });
+
+        // 初始化图表
+        function initCharts() {
+            // 班级正确率趋势图
+            const accuracyCtx = document.getElementById('accuracyChart').getContext('2d');
+            new Chart(accuracyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周'],
+                    datasets: [{
+                        label: '班级平均正确率',
+                        data: [75, 78, 82, 79, 85, 82.5],
+                        borderColor: '#165DFF',
+                        backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 50,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 知识点掌握情况
+            const knowledgeCtx = document.getElementById('knowledgeChart').getContext('2d');
+            new Chart(knowledgeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['函数基础', '高阶函数', 'map/filter', 'lambda', 'Memoization'],
+                    datasets: [{
+                        label: '掌握程度 (%)',
+                        data: [85, 72, 88, 65, 78],
+                        backgroundColor: [
+                            'rgba(22, 93, 255, 0.7)',
+                            'rgba(54, 207, 201, 0.7)',
+                            'rgba(82, 196, 26, 0.7)',
+                            'rgba(250, 173, 20, 0.7)',
+                            'rgba(255, 77, 79, 0.7)'
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 获取AI解析结果
+        function getParseResult() {
+            // 显示加载状态
+            outlineContent.disabled = true;
+            outlineContent.value = '正在解析文件内容，请稍候...';
+
+            // 发送AJAX请求获取解析结果
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/teacher/parseResult', true);
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    outlineContent.disabled = false;
+
+                    if (xhr.status === 200) {
+                        // 更新大纲内容
+                        outlineContent.value = xhr.responseText;
+
+                        // 更新时间戳
+                        updateTime.textContent = new Date().toLocaleTimeString();
+
+                        alert('大纲生成成功！');
+                    } else {
+                        outlineContent.value = '大纲生成失败，请重试';
+                        console.error('获取解析结果失败:', xhr.statusText);
+                    }
+                }
+            };
+
+            xhr.send();
+        }
+
+        // 随机生成编程题目
+        function getRandomProgrammingQuestion() {
+            const questions = [
+                "实现一个函数，判断一个字符串是否是有效的括号序列",
+                "编写一个函数，将一个数组中的元素按升序排列",
+                "实现一个链表节点类，并编写函数反转链表",
+                "编写一个函数，计算两个整数的最大公约数",
+                "实现一个栈结构，支持push、pop和peek操作",
+                "编写一个函数，检查一个数是否是素数",
+                "实现一个二叉树节点类，并编写函数前序遍历二叉树",
+                "编写一个函数，将一个十进制数转换为二进制字符串",
+                "实现一个队列结构，支持enqueue和dequeue操作",
+                "编写一个函数，计算斐波那契数列的第n项"
+            ];
+            return questions[Math.floor(Math.random() * questions.length)];
+        }
+
+        // 随机生成测试用例
+        function getRandomTestCases() {
+            const testCases = [
+                "输入：s = \"()[]{}\"\n输出：true\n\n输入：s = \"(]\"\n输出：false\n\n输入：s = \"([)]\"\n输出：false",
+                "输入：nums = [5, 3, 8, 4, 2]\n输出：[2, 3, 4, 5, 8]\n\n输入：nums = [10, -2, 0, 5]\n输出：[-2, 0, 5, 10]",
+                "输入：1->2->3->4->5->NULL\n输出：5->4->3->2->1->NULL\n\n输入：NULL\n输出：NULL",
+                "输入：a = 24, b = 18\n输出：6\n\n输入：a = 49, b = 35\n输出：7",
+                "输入：push(1), push(2), pop(), push(3), peek()\n输出：2, 3\n\n输入：push(10), pop(), pop()\n输出：10, Error",
+                "输入：n = 7\n输出：true\n\n输入：n = 4\n输出：false\n\n输入：n = 1\n输出：false",
+                "输入：root = [1,null,2,3]\n输出：[1,2,3]\n\n输入：root = []\n输出：[]",
+                "输入：n = 13\n输出：\"1101\"\n\n输入：n = 0\n输出：\"0\"",
+                "输入：enqueue(1), enqueue(2), dequeue(), enqueue(3), dequeue()\n输出：1, 2\n\n输入：dequeue(), enqueue(5)\n输出：Error, 5",
+                "输入：n = 5\n输出：5\n\n输入：n = 10\n输出：55\n\n输入：n = 0\n输出：0"
+            ];
+            return testCases[Math.floor(Math.random() * testCases.length)];
+        }
+
+        // 随机生成选择题
+        function getRandomMultipleChoiceQuestion() {
+            const questions = [
+                "以下哪个是Python中的不可变数据类型？\nA. 列表\nB. 字典\nC. 集合\nD. 元组",
+                "在Python中，哪个关键字用于定义一个函数？\nA. function\nB. def\nC. define\nD. func",
+                "Python中的lambda函数是什么？\nA. 一种特殊的函数定义语法\nB. 一种匿名函数\nC. 一种递归函数\nD. 一种高阶函数",
+                "以下哪个是Python中的内置高阶函数？\nA. map()\nB. filter()\nC. reduce()\nD. 以上都是",
+                "在Python中，哪个方法用于从列表中删除最后一个元素并返回它？\nA. remove()\nB. pop()\nC. delete()\nD. discard()",
+                "以下哪个是Python中的异常处理关键字？\nA. try\nB. catch\nC. except\nD. A和C",
+                "Python中的列表推导式的语法是什么？\nA. [x for x in iterable if condition]\nB. {x: x*2 for x in iterable}\nC. (x for x in iterable)\nD. 以上都是",
+                "在Python中，哪个模块提供了正则表达式支持？\nA. regex\nB. re\nC. regular\nD. expressions",
+                "Python中的装饰器是什么？\nA. 一种特殊的函数\nB. 一种设计模式\nC. 一种语法糖\nD. 以上都是",
+                "以下哪个是Python中的文件操作模式？\nA. 'r'\nB. 'w'\nC. 'a'\nD. 以上都是"
+            ];
+            return questions[Math.floor(Math.random() * questions.length)];
+        }
+
+        // 随机生成答案解析
+        function getRandomAnswerExplanation() {
+            const explanations = [
+                "正确答案：D\n\n解析：元组是Python中的不可变数据类型，一旦创建就不能修改。列表、字典和集合都是可变数据类型。",
+                "正确答案：B\n\n解析：在Python中，使用def关键字来定义函数。function是JavaScript中定义函数的关键字，define和func在Python中没有特殊意义。",
+                "正确答案：B\n\n解析：lambda函数是Python中的匿名函数，它可以在需要函数对象的地方内联定义。虽然lambda函数可以作为高阶函数的参数，但它本身并不是高阶函数。",
+                "正确答案：D\n\n解析：map()、filter()和reduce()都是Python中的内置高阶函数。map()对可迭代对象的每个元素应用函数，filter()过滤元素，reduce()累积计算元素。",
+                "正确答案：B\n\n解析：pop()方法用于从列表中删除最后一个元素并返回它。remove()方法删除指定值的第一个匹配项，delete不是列表的方法，discard是集合的方法。",
+                "正确答案：D\n\n解析：在Python中，使用try和except关键字进行异常处理。try块包含可能引发异常的代码，except块处理异常。catch是Java等语言中使用的关键字。",
+                "正确答案：A\n\n解析：列表推导式的语法是[x for x in iterable if condition]。选项B是字典推导式的语法，选项C是生成器表达式的语法。",
+                "正确答案：B\n\n解析：Python中的re模块提供了正则表达式支持。没有regex、regular或expressions这样的内置模块。",
+                "正确答案：D\n\n解析：装饰器是Python中的一种特殊函数，它可以接受一个函数作为参数，并返回一个新的函数。装饰器是一种设计模式，也是一种语法糖，用于简化函数或类的包装。",
+                "正确答案：D\n\n解析：'r'表示读取模式，'w'表示写入模式，'a'表示追加模式。这些都是Python中常用的文件操作模式。"
+            ];
+            return explanations[Math.floor(Math.random() * explanations.length)];
+        }
+    });
+</script>
+</body>
+</html>

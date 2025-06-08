@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>教师备课系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        danger: '#FF4D4F',
+                        info: '#1890FF',
+                        dark: '#1F2937',
+                        light: '#F9FAFB',
+                        model1: '#7B61FF', // 模型1颜色
+                        model2: '#FF7D00', // 模型2颜色
+                        model3: '#00B42A', // 模型3颜色
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+            }
+            .form-focus {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all;
+            }
+            .upload-drag-hover {
+                @apply border-primary bg-primary/5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter text-gray-800 min-h-screen">
+<!-- 顶部导航 -->
+<header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fa fa-book text-primary text-2xl"></i>
+            <h1 class="text-xl font-bold text-dark">教师备课系统</h1>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">首页</a>
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">课程管理</a>
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">学情分析</a>
+            <a href="#" class="text-gray-600 hover:text-primary transition-colors">资源库</a>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <i class="fa fa-search text-gray-400"></i>
+          </span>
+                <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none form-focus text-sm w-40 md:w-60">
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <i class="fa fa-user"></i>
+                </div>
+                <span class="hidden md:inline text-sm font-medium">{{ session.get('username','未登录用户')}}老师</span>
+                <i class="fa fa-angle-down text-gray-500"></i>
+            </div>
+
+            <button class="md:hidden text-gray-600">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- 主内容区 -->
+<main class="container mx-auto px-4 py-6">
+    <!-- 面包屑导航 -->
+    <div class="flex items-center text-sm text-gray-500 mb-6">
+        <a href="#" class="hover:text-primary">首页</a>
+        <i class="fa fa-angle-right mx-2 text-xs"></i>
+        <span class="text-gray-700">备课中心</span>
+    </div>
+
+    <!-- 欢迎信息 -->
+    <div class="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-6 mb-8">
+        <h2 class="text-2xl font-bold text-dark mb-2">欢迎回来，{{ session.get('username','未登录用户')}}老师</h2>
+        <p class="text-gray-600">今天是 <span id="current-date">2025年6月6日</span>，您有 <span class="text-primary font-medium">3</span> 个课程需要备课</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-file-text-o text-primary"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">待备课</h3>
+                        <p class="text-2xl font-bold">3</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-check-circle-o text-success"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">已完成</h3>
+                        <p class="text-2xl font-bold">12</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-calendar-o text-warning"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium">今日课程</h3>
+                        <p class="text-2xl font-bold">2</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 大模型选择区 -->
+    <div class="bg-white rounded-xl p-6 card-shadow mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold flex items-center">
+                <i class="fa fa-microchip text-primary mr-2"></i>
+                选择大模型
+            </h3>
+            <button class="text-sm text-primary hover:text-primary/80 transition-colors" id="manage-models-btn">
+                <i class="fa fa-cog"></i> 管理模型
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors" data-model="spark">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-model1/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-bolt text-model1"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium">星火大模型</h4>
+                        <p class="text-xs text-gray-500">毫秒级响应 · 高性能</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center model-selected-indicator hidden">
+                    <span class="text-xs text-gray-500">当前选择</span>
+                    <i class="fa fa-check-circle text-primary"></i>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors model-active" data-model="deepseek-r1">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-model2/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-paw text-model2"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium">deepseek-r1</h4>
+                        <p class="text-xs text-gray-500">本地部署 · 支持自定义向量知识库</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center model-selected-indicator">
+                    <span class="text-xs text-gray-500">当前选择</span>
+                    <i class="fa fa-check-circle text-primary"></i>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors" data-model="qwen3">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-model3/10 flex items-center justify-center mr-3">
+                        <i class="fa fa-leaf text-model3"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium">Qwen3</h4>
+                        <p class="text-xs text-gray-500">中文更友好 · 专属风格</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center model-selected-indicator hidden">
+                    <span class="text-xs text-gray-500">当前选择</span>
+                    <i class="fa fa-check-circle text-primary"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 bg-gray-50 p-3 rounded-lg">
+            <div class="flex items-center text-sm">
+                <i class="fa fa-info-circle text-primary mr-2"></i>
+                <span>选择不同的大模型会影响内容生成的风格和速度。您可以在 <a href="#models" class="text-primary hover:underline">模型管理</a> 中添加更多模型。</span>
+            </div>
+        </div>
+    </div>
+    <!-- 备课工作区 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 左侧：课程大纲 -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- 课程大纲上传 -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-upload text-primary mr-2"></i>
+                        课程大纲上传与解析
+                    </h3>
+                    <button class="text-sm text-primary hover:text-primary/80 transition-colors">
+                        <i class="fa fa-question-circle"></i> 帮助
+                    </button>
+                </div>
+
+                <p class="text-gray-500 text-sm mb-4">支持上传本地课程大纲（Word/PDF/PPT），系统将自动解析知识点</p>
+
+                <!-- 文件上传区域 -->
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer" id="upload-area">
+                    <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-600 mb-1">点击或拖拽文件到此处上传</p>
+                    <p class="text-xs text-gray-500" id="upload-file-types">支持 .docx, .pdf 文件（最大 10MB）</p>
+                    <input type="file" id="outline-file" class="hidden" accept=".docx,.pdf,.txt">
+                </div>
+
+                <!-- 添加上传进度条 -->
+                <div id="upload-progress" class="mt-4 hidden bg-gray-100 rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm text-gray-600">上传进度</span>
+                        <span class="text-sm font-medium" id="upload-percentage">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div id="progress-bar" class="bg-primary h-1.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4" id="大纲内容-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-medium">解析结果（可编辑）</label>
+                        <span class="text-xs text-gray-500">上次更新: <span id="update-time">17:48:11</span></span>
+                    </div>
+                    <textarea class="w-full p-3 border border-gray-300 rounded-lg form-focus" rows="5" id="outline-content">
+
+请先上传文件，成功上传后再点击智能备课即可生成课程大纲</textarea>
+                </div>
+
+                <div class="mt-4 flex justify-between">
+                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors btn-hover" id="save-outline">
+                        <i class="fa fa-save mr-1"></i> 保存大纲
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors btn-hover" id="generate-lesson">
+                        <i class="fa fa-magic mr-1"></i> 智能生成备课内容
+                    </button>
+                </div>
+            </div>
+
+            <!-- 智能备课内容 -->
+            <div class="bg-white rounded-xl p-6 card-shadow" id="备课内容-container">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-lightbulb-o text-primary mr-2"></i>
+                        智能生成备课内容
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button class="text-sm text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-edit"></i> 编辑
+                        </button>
+                        <button class="text-sm text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-share-alt"></i> 分享
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">知识讲解</label>
+                        <div class="border border-gray-300 rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 p-2 border-b border-gray-300">
+                                <div class="flex space-x-2">
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
+                                    <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-link"></i></button>
+                                </div>
+                            </div>
+                            <textarea class="w-full p-3 border-0 focus:ring-0" rows="3" id="知识讲解">【知识讲解】
+
+1. 函数式编程基础概念

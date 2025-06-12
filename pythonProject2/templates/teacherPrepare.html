@@ -12,6 +12,209 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3"></script>
+    //课程历史记录模块//
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .history-container {
+            max-width: 800px;
+            margin: 30px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 8px;
+            color: #0d6efd;
+        }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-controls .form-control {
+            width: 150px;
+            margin-right: 10px;
+        }
+
+        .filter-controls .btn {
+            padding: 0.375rem 0.75rem;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-item:hover {
+            background-color: #f8f9fa;
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            max-width: calc(100% - 150px);
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            background-color: #f1f3f5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 24px;
+        }
+
+        .file-icon.docx {
+            color: #2a5699;
+        }
+
+        .file-icon.pdf {
+            color: #e31c3d;
+        }
+
+        .file-icon.ppt {
+            color: #d24726;
+        }
+
+        .file-icon.txt {
+            color: #5694f1;
+        }
+
+        .file-icon.xlsx {
+            color: #107c41;
+        }
+
+        .file-details {
+            overflow: hidden;
+        }
+
+        .file-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .file-meta span {
+            margin-right: 15px;
+        }
+
+        .file-actions {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .file-actions .btn {
+            margin-left: 8px;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .no-records i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #e9ecef;
+        }
+
+        /* 分页样式 */
+        .pagination-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-controls {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filter-controls .form-control {
+                width: 120px;
+            }
+
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .file-info {
+                max-width: 100%;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .file-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+    //课程历史记录模块//
 
     <!-- Tailwind 配置 -->
     <script>
@@ -58,6 +261,16 @@
             }
         }
     </style>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .theme-transition {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 font-inter text-gray-800 min-h-screen">
 <!-- 顶部导航 -->
@@ -69,10 +282,11 @@
         </div>
 
         <div class="hidden md:flex items-center space-x-6">
-            <a href="#" class="text-primary font-medium hover:text-primary/80 transition-colors">首页</a>
-            <a href="{{ url_for('teacher.lessonPrepare') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">备课</a>
+            <a href="{{ url_for('teacher.teacherSumPage') }}" class="text-gray-600 font-medium hover:text-primary/80 transition-colors">首页</a>
+            <a href="{{ url_for('teacher.lessonPrepare') }}" class="text-primary font-medium hover:text-primary transition-colors">备课</a>
             <a href="{{ url_for('teacher.teacherExam') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">考核</a>
             <a href="{{ url_for('teacher.teacherAnalyse') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">学情分析</a>
+            <a href="{{ url_for('teacher.teacherClassManager') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">班级管理</a>
             <a href="{{ url_for('teacher.systemAdministration') }}" class="text-gray-600 font-medium hover:text-primary transition-colors">系统管理</a>
         </div>
 
@@ -223,8 +437,9 @@
     </div>
     <!-- 备课工作区 -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- 左侧：课程大纲 -->
+        <!-- 左侧区域：占据2/3宽度 -->
         <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl p-6 card-shadow" id="备课内容-container-1">
             <!-- 课程大纲上传 -->
             <div class="bg-white rounded-xl p-6 card-shadow">
                 <div class="flex justify-between items-center mb-4">
@@ -237,7 +452,7 @@
                     </button>
                 </div>
 
-                <p class="text-gray-500 text-sm mb-4">支持上传本地课程大纲（Word/PDF/PPT），系统将自动解析知识点</p>
+                <p class="text-gray-500 text-sm mb-4">支持上传本地课程大纲（Docx/PDF/PPT/Xlsx），系统将自动解析知识点</p>
 
                 <!-- 文件上传区域 -->
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer" id="upload-area">
@@ -258,26 +473,296 @@
                     </div>
                 </div>
 
-                <div class="mt-4" id="大纲内容-container">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-sm font-medium">解析结果（可编辑）</label>
-                        <span class="text-xs text-gray-500">上次更新: <span id="update-time">17:48:11</span></span>
+<!--                <div class="mt-4" id="大纲内容-container">-->
+<!--                    <div class="flex justify-between items-center mb-2">-->
+<!--                        <label class="text-sm font-medium">解析结果（可编辑）</label>-->
+<!--                        <span class="text-xs text-gray-500">上次更新: <span id="update-time">17:48:11</span></span>-->
+<!--                    </div>-->
+<!--                    <textarea class="w-full p-3 border border-gray-300 rounded-lg form-focus" rows="5" id="outline-content">-->
+
+<!--请先上传文件，成功上传后再点击智能备课即可生成课程大纲</textarea>-->
+<!--                </div>-->
+
+<!--                <div class="mt-4 flex justify-between">-->
+<!--                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors btn-hover" id="save-outline">-->
+<!--                        <i class="fa fa-save mr-1"></i> 保存大纲-->
+<!--                    </button>-->
+<!--                </div>-->
+                <!-- 模块1：课程上传记录 -->
+                <div class="history-container" id="module-1">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-history" aria-hidden="true"></i>
+                            课程上传记录
+                        </h3>
+                        <div class="filter-controls">
+                            <select class="form-select form-select-sm">
+                                <option value="all">所有类型</option>
+                                <option value="docx">Word文档</option>
+                                <option value="pdf">PDF文档</option>
+                                <option value="ppt">PPT演示</option>
+                                <option value="txt">文本文件</option>
+                                <option value="xlsx">Excel表格</option>
+                            </select>
+                            <select class="form-select form-select-sm">
+                                <option value="all">所有状态</option>
+                                <option value="success">已处理</option>
+                                <option value="pending">处理中</option>
+                                <option value="error">处理失败</option>
+                            </select>
+                            <link
+                                    rel="stylesheet"
+                                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+                            />
+                            <div class="d-flex align-items-center" style="width: 300px;">
+                                <!-- 搜索框填充剩余空间 -->
+                                <input
+                                        type="text"
+                                        class="form-control flex-grow-1"
+                                        placeholder="搜索文件名"
+                                />
+                                <button class="btn btn-primary ms-2">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <script
+                                    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+                            ></script>
+                        </div>
                     </div>
-                    <textarea class="w-full p-3 border border-gray-300 rounded-lg form-focus" rows="5" id="outline-content">
-
-请先上传文件，成功上传后再点击智能备课即可生成课程大纲</textarea>
+                    <div class="d-flex justify-content-between align-items-center text-muted mb-3">
+                        <div>共 <span class="fw-bold text-primary record-count" id="count-1">12</span> 条记录</div>
+                        <div>最后更新时间: <span class="fw-bold last-update" id="update-1">2025-06-12 15:30</span></div>
+                    </div>
+                    <div class="file-list" id="file-list-1"></div>
+                    <div id="no-records-1" class="no-records d-none">
+                        <i class="fa fa-file-o" aria-hidden="true"></i>
+                        <p class="mb-0">暂无上传记录</p>
+                    </div>
+                    <div class="pagination-container">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
+<!--                使用方法：1.复制一个 .history-container 块并修改 ID（如 module-3）-->
+<!--                        2.在 moduleData 对象中添加对应的数据数组-->
+<!--                        3.调整标题文本和其他自定义内容-->
+                <!-- 引入Bootstrap和jQuery -->
+                <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-                <div class="mt-4 flex justify-between">
-                    <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors btn-hover" id="save-outline">
-                        <i class="fa fa-save mr-1"></i> 保存大纲
+                <script>
+                    // 初始化所有模块
+                    document.addEventListener('DOMContentLoaded', async function() {
+                        try {
+                            // 从Flask API获取模块1的数据
+                            const response1 = await fetch('/teacher/records/1');
+                            const module1Data = await response1.json();
+
+                            // 从Flask API获取模块2的数据
+                            const response2 = await fetch('/teacher/records/2');
+                            const module2Data = await response2.json();
+
+                            // 初始化模块1
+                            initModule('module-1', module1Data);
+
+                            // 初始化模块2
+                            initModule('module-2', module2Data);
+
+                            // 初始化提示工具
+                            $('[data-toggle="tooltip"]').tooltip();
+
+                        } catch (error) {
+                            console.error('获取数据失败:', error);
+                            document.getElementById('file-list-1').innerHTML = '<div class="text-center py-10">数据加载失败，请检查服务器</div>';
+                            document.getElementById('file-list-2').innerHTML = '<div class="text-center py-10">数据加载失败，请检查服务器</div>';
+                        }
+                    });
+
+                    // 初始化单个模块
+                    function initModule(moduleId, moduleData) {
+                        // DOM元素
+                        const fileList = document.getElementById(`file-list-${moduleId.split('-')[1]}`);
+                        const noRecords = document.getElementById(`no-records-${moduleId.split('-')[1]}`);
+                        const recordCount = document.getElementById(`count-${moduleId.split('-')[1]}`);
+
+                        // 更新记录计数
+                        if (recordCount) {
+                            recordCount.textContent = moduleData.length;
+                        }
+
+                        // 加载历史记录
+                        loadHistory(fileList, noRecords, moduleData);
+
+                        // 绑定筛选事件
+                        const filterSelects = document.querySelectorAll(`#${moduleId} .filter-controls select`);
+                        filterSelects.forEach(select => {
+                            select.addEventListener('change', () => filterFiles(moduleId, moduleData));
+                        });
+
+                        const searchInput = document.querySelector(`#${moduleId} .filter-controls input`);
+                        const searchButton = document.querySelector(`#${moduleId} .filter-controls button`);
+
+                        searchInput.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                filterFiles(moduleId, moduleData);
+                            }
+                        });
+
+                        searchButton.addEventListener('click', () => filterFiles(moduleId, moduleData));
+                    }
+
+                    // 加载历史记录
+                    function loadHistory(fileList, noRecords, data) {
+                        if (data.length === 0) {
+                            noRecords.classList.remove('d-none');
+                            return;
+                        }
+
+                        noRecords.classList.add('d-none');
+                        fileList.innerHTML = '';
+
+                        data.forEach(file => {
+                            const fileItem = createFileItem(file);
+                            fileList.appendChild(fileItem);
+                        });
+                    }
+
+                    // 创建文件项HTML
+                    function createFileItem(file) {
+                        const item = document.createElement('div');
+                        item.className = 'file-item';
+                        item.dataset.id = file.id;
+
+                        item.innerHTML = `
+                <div class="file-info">
+                    <div class="file-icon ${file.type}">
+                        <i class="fa fa-file-${getIconClass(file.type)}" aria-hidden="true"></i>
+                    </div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">
+                            <span>${file.size}</span>
+                            <span>${file.uploadDate}</span>
+                            <span class="${file.statusColor}">${file.statusText}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <button class="btn btn-sm btn-outline-primary" title="查看详情">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
                     </button>
-                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors btn-hover" id="generate-lesson">
-                        <i class="fa fa-magic mr-1"></i> 智能生成备课内容
+                    <button class="btn btn-sm btn-outline-secondary" title="下载">
+                        <i class="fa fa-download" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" title="删除">
+                        <i class="fa fa-trash-o" aria-hidden="true"></i>
                     </button>
                 </div>
+            `;
+
+                        // 绑定操作按钮事件
+                        const viewBtn = item.querySelector('.btn-outline-primary');
+                        const downloadBtn = item.querySelector('.btn-outline-secondary');
+                        const deleteBtn = item.querySelector('.btn-outline-danger');
+
+                        viewBtn.addEventListener('click', () => viewFile(file));
+                        downloadBtn.addEventListener('click', () => downloadFile(file));
+                        deleteBtn.addEventListener('click', () => deleteFile(file, item));
+
+                        return item;
+                    }
+
+                    // 获取文件类型对应的图标类名
+                    function getIconClass(fileType) {
+                        const iconMap = {
+                            docx: 'word-o',
+                            pdf: 'pdf-o',
+                            ppt: 'powerpoint-o',
+                            txt: 'text-o',
+                            xlsx: 'excel-o'
+                        };
+
+                        return iconMap[fileType] || 'file-o';
+                    }
+
+                    // 查看文件
+                    function viewFile(file) {
+                        alert(`查看文件: ${file.name}`);
+                        // 实际应用中这里会打开文件预览或详情页
+                    }
+
+                    // 下载文件
+                    function downloadFile(file) {
+                        alert(`下载文件: ${file.name}`);
+                        // 实际应用中这里会触发文件下载
+                    }
+
+                    // 删除文件
+                    function deleteFile(file, item) {
+                        if (confirm(`确定要删除文件 "${file.name}" 吗？`)) {
+                            // 从DOM中移除
+                            item.remove();
+
+                            // 检查是否还有记录
+                            const fileList = item.closest('.file-list');
+                            const noRecords = fileList.nextElementSibling;
+
+                            if (fileList.children.length === 0) {
+                                noRecords.classList.remove('d-none');
+                            }
+
+                            alert(`文件 "${file.name}" 已删除`);
+                        }
+                    }
+
+                    // 筛选文件
+                    function filterFiles(moduleId, allData) {
+                        const fileList = document.getElementById(`file-list-${moduleId.split('-')[1]}`);
+                        const noRecords = document.getElementById(`no-records-${moduleId.split('-')[1]}`);
+
+                        // 获取筛选条件
+                        const typeFilter = document.querySelector(`#${moduleId} .filter-controls select[name="type"]`).value;
+                        const statusFilter = document.querySelector(`#${moduleId} .filter-controls select[name="status"]`).value;
+                        const searchTerm = document.querySelector(`#${moduleId} .filter-controls input`).value.toLowerCase();
+
+                        // 筛选数据
+                        const filteredData = allData.filter(file => {
+                            const matchesType = typeFilter === 'all' || file.type === typeFilter;
+                            const matchesStatus = statusFilter === 'all' || file.status === statusFilter;
+                            const matchesSearch = !searchTerm || file.name.toLowerCase().includes(searchTerm);
+
+                            return matchesType && matchesStatus && matchesSearch;
+                        });
+
+                        // 重新加载历史记录
+                        loadHistory(fileList, noRecords, filteredData);
+
+                        // 更新记录计数
+                        const recordCount = document.getElementById(`count-${moduleId.split('-')[1]}`);
+                        if (recordCount) {
+                            recordCount.textContent = filteredData.length;
+                        }
+                    }
+                </script>
             </div>
 
+            <!-- 智能备课内容 -->
             <div class="bg-white rounded-xl p-6 card-shadow" id="备课内容-container">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-bold flex items-center">
@@ -285,270 +770,109 @@
                         智能生成备课内容
                     </h3>
                     <div class="flex space-x-2">
-                        <button class="text-sm text-gray-500 hover:text-primary transition-colors" id="editBtn">
-                            <i class="fa fa-edit"></i> 编辑
-                        </button>
-                        <button class="text-sm text-gray-500 hover:text-primary transition-colors" id="shareBtn">
-                            <i class="fa fa-share-alt"></i> 分享
+                        <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors btn-hover" id="generate-lesson">
+                            <i class="fa fa-magic mr-1"></i> 一键生成
                         </button>
                     </div>
                 </div>
-
-                <!-- 知识讲解部分（初始隐藏） -->
-                <div id="knowledgeSection" class="space-y-4 hidden">
-                    <label class="block text-sm font-medium mb-1">知识讲解</label>
-                    <div class="border border-gray-300 rounded-lg overflow-hidden" onclick="openModal('知识讲解')">
-                        <!-- 保持原有操作按钮 -->
-                        <div class="bg-gray-50 p-2 border-b border-gray-300">
-                            <div class="flex space-x-2">
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-link"></i></button>
+                    <div class="flex items-center">
+                        <div class="w-1/3">
+                            <label class="block text-sm font-medium mb-1">时间分配（分钟）</label>
+                            <input type="number" class="w-full p-3 border border-gray-300 rounded-lg form-focus" id="时间分配" value="90">
+                        </div>
+                        <div class="w-2/3 ml-4">
+                            <label class="block text-sm font-medium mb-1">时间轴预览</label>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" id="时间轴" style="width: 50%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0分钟</span>
+                                <span>90分钟</span>
+                                <span>180分钟</span>
                             </div>
                         </div>
-                        <div class="p-3 h-24 overflow-hidden text-gray-700" id="知识讲解预览">
-                            <!-- 动态生成内容在此显示 -->
-                        </div>
                     </div>
-                </div>
-
-                <!-- 实训练习部分（初始隐藏） -->
-                <div id="practiceSection" class="space-y-4 hidden">
-                    <label class="block text-sm font-medium mb-1">实训练习</label>
-                    <div class="border border-gray-300 rounded-lg overflow-hidden" onclick="openModal('实训练习')">
-                        <!-- 保持原有操作按钮 -->
-                        <div class="bg-gray-50 p-2 border-b border-gray-300">
-                            <div class="flex space-x-2">
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-code"></i></button>
+                <div class="history-container" id="module-2">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-history" aria-hidden="true"></i>
+                            智能备课记录
+                        </h3>
+                        <div class="filter-controls">
+                            <select class="form-select form-select-sm">
+                                <option value="all">所有类型</option>
+                                <option value="docx">Word文档</option>
+                                <option value="pdf">PDF文档</option>
+                                <option value="ppt">PPT演示</option>
+                                <option value="txt">文本文件</option>
+                                <option value="xlsx">Excel表格</option>
+                            </select>
+                            <select class="form-select form-select-sm">
+                                <option value="all">所有状态</option>
+                                <option value="success">已处理</option>
+                                <option value="pending">处理中</option>
+                                <option value="error">处理失败</option>
+                            </select>
+                            <link
+                                    rel="stylesheet"
+                                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+                            />
+                            <div class="d-flex align-items-center" style="width: 300px;">
+                                <!-- 搜索框填充剩余空间 -->
+                                <input
+                                        type="text"
+                                        class="form-control flex-grow-1"
+                                        placeholder="搜索文件名"
+                                />
+                                <button class="btn btn-primary ms-2">
+                                    <i class="bi bi-search"></i>
+                                </button>
                             </div>
+                            <script
+                                    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+                            ></script>
                         </div>
-                        <div class="p-3 h-24 overflow-hidden text-gray-700" id="实训练习预览">
-                            <!-- 动态生成内容在此显示 -->
-                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center text-muted mb-3">
+                        <div>共 <span class="fw-bold text-primary record-count" id="count-2">12</span> 条记录</div>
+                        <div>最后更新时间: <span class="fw-bold last-update" id="update-2">2025-06-12 15:30</span></div>
+                    </div>
+                    <div class="file-list" id="file-list-2"></div>
+                    <div id="no-records-2" class="no-records d-none">
+                        <i class="fa fa-file-o" aria-hidden="true"></i>
+                        <p class="mb-0">暂无上传记录</p>
+                    </div>
+                    <div class="pagination-container">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
-
-                <!-- 时间分配和时间轴 -->
-                <div class="flex items-center">
-                    <div class="w-1/3">
-                        <label class="block text-sm font-medium mb-1">时间分配（分钟）</label>
-                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg form-focus" id="时间分配" value="90">
-                    </div>
-                    <div class="w-2/3 ml-4">
-                        <label class="block text-sm font-medium mb-1">时间轴预览</label>
-                        <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="h-full bg-primary" id="时间轴" style="width: 50%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>0分钟</span>
-                            <span>90分钟</span>
-                            <span>180分钟</span>
-                        </div>
-                    </div>
                 </div>
-
-                <!-- 智能生成按钮（关键修改点） -->
-                <div class="flex justify-between mt-4">
-                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors btn-hover" onclick="generateContent()">
-                        <i class="fa fa-magic mr-1"></i> 智能生成
-                    </button>
-                    <button class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors btn-hover" id="saveBtn">
-                        <i class="fa fa-save mr-1"></i> 保存
-                    </button>
-                </div>
-            </div>
-
-            <!-- 知识讲解弹窗（初始隐藏内容） -->
-            <div id="知识讲解Modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-100 hidden">
-                <div class="bg-white rounded-lg p-6 w-full max-w-6xl mx-4 transform transition-all scale-95">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-2xl font-bold">知识讲解编辑</h3>
-                        <button class="text-gray-500 hover:text-gray-700" onclick="closeModal('知识讲解')">
-                            <i class="fa fa-times text-2xl"></i>
-                        </button>
-                    </div>
-                    <div class="border border-gray-300 rounded-lg overflow-hidden">
-                        <div class="bg-gray-50 p-2 border-b border-gray-300">
-                            <div class="flex space-x-2">
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-link"></i></button>
-                            </div>
-                        </div>
-                        <textarea class="w-full p-3 border-0 focus:ring-0" rows="15" id="知识讲解编辑">
-      </textarea>
-                    </div>
-                    <div class="flex justify-end mt-4">
-                        <button type="button" class="px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-400 mr-2" onclick="closeModal('知识讲解')">取消</button>
-                        <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90" onclick="saveContent('知识讲解')">保存修改</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 实训练习弹窗（初始隐藏内容） -->
-            <div id="实训练习Modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-100 hidden">
-                <div class="bg-white rounded-lg p-6 w-full max-w-6xl mx-4 transform transition-all scale-95">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-2xl font-bold">实训练习编辑</h3>
-                        <button class="text-gray-500 hover:text-gray-700" onclick="closeModal('实训练习')">
-                            <i class="fa fa-times text-2xl"></i>
-                        </button>
-                    </div>
-                    <div class="border border-gray-300 rounded-lg overflow-hidden">
-                        <div class="bg-gray-50 p-2 border-b border-gray-300">
-                            <div class="flex space-x-2">
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-bold"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-italic"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ul"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-list-ol"></i></button>
-                                <button class="text-gray-600 hover:text-primary transition-colors"><i class="fa fa-code"></i></button>
-                            </div>
-                        </div>
-                        <textarea class="w-full p-3 border-0 focus:ring-0" rows="15" id="实训练习编辑">
-      </textarea>
-                    </div>
-                    <div class="flex justify-end mt-4">
-                        <button type="button" class="px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-400 mr-2" onclick="closeModal('实训练习')">取消</button>
-                        <button type="button" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90" onclick="saveContent('实训练习')">保存修改</button>
-                    </div>
-                </div>
-            </div>
-
-            <script>
-                // 打开弹窗函数
-                function openModal(type) {
-                    const previewContent = document.getElementById(type + '预览').textContent;
-                    document.getElementById(type + '编辑').value = previewContent;
-                    document.getElementById(type + 'Modal').classList.remove('hidden');
-                }
-
-                // 关闭弹窗函数
-                function closeModal(type) {
-                    document.getElementById(type + 'Modal').classList.add('hidden');
-                }
-
-                // 保存内容函数
-                function saveContent(type) {
-                    const editedContent = document.getElementById(type + '编辑').value;
-                    document.getElementById(type + '预览').textContent = editedContent;
-                    closeModal(type);
-                }
-            </script>
-            <!-- 知识库卡片 -->
-            <div class="bg-white rounded-xl p-6 card-shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold flex items-center">
-                        <i class="fa fa-book text-primary mr-2"></i>
-                        知识库
-                    </h3>
-                    <a href="#knowledge" class="text-sm text-primary hover:text-primary/80 transition-colors">
-                        查看全部
-                    </a>
-                </div>
-
-                <p class="text-gray-500 text-sm mb-4">基于您的教学内容构建的专属知识库，向量化知识库，教学更加高效</p>
-
-                <div class="space-y-3">
-                    <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                            <i class="fa fa-file-text-o text-primary"></i>
-                        </div>
-                        <div class="flex-grow">
-                            <h4 class="font-medium text-sm">Python函数式编程基础</h4>
-                            <p class="text-xs text-gray-500">12个知识点 · 上次更新: 今天</p>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">已同步</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                            <i class="fa fa-file-text-o text-primary"></i>
-                        </div>
-                        <div class="flex-grow">
-                            <h4 class="font-medium text-sm">数据结构与算法</h4>
-                            <p class="text-xs text-gray-500">24个知识点 · 上次更新: 昨天</p>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">已同步</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                            <i class="fa fa-file-text-o text-primary"></i>
-                        </div>
-                        <div class="flex-grow">
-                            <h4 class="font-medium text-sm">Web开发基础</h4>
-                            <p class="text-xs text-gray-500">18个知识点 · 上次更新: 3天前</p>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">更新中</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="w-full mt-4 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center">
-                    <i class="fa fa-plus mr-2"></i> 添加新知识库
-                </button>
             </div>
         </div>
+        </div>
+        <br>
+    <br>
+    <br>
 
 
         <!-- 右侧：学情分析与辅助工具 -->
-        <div class="space-y-6">
-            <!-- 学情数据分析 -->
-            <div class="bg-white rounded-xl p-6 card-shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold flex items-center">
-                        <i class="fa fa-bar-chart text-primary mr-2"></i>
-                        学情数据分析
-                    </h3>
-                    <select class="text-sm border border-gray-300 rounded-lg px-2 py-1">
-                        <option>最近一个月</option>
-                        <option>本学期</option>
-                        <option>全部</option>
-                    </select>
-                </div>
-
-                <p class="text-gray-500 text-sm mb-4">可视化分析学生答题数据，辅助备课决策</p>
-
-                <!-- 正确率趋势图 -->
-                <div class="mb-6">
-                    <h4 class="text-sm font-medium mb-2">班级正确率趋势</h4>
-                    <div class="h-60">
-                        <canvas id="accuracyChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- 知识点掌握情况 -->
-                <div>
-                    <h4 class="text-sm font-medium mb-2">知识点掌握情况</h4>
-                    <div class="h-60">
-                        <canvas id="knowledgeChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="mt-4 grid grid-cols-2 gap-3">
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                        <div class="text-xs text-gray-500">平均正确率</div>
-                        <div class="text-xl font-bold">82.5%</div>
-                    </div>
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                        <div class="text-xs text-gray-500">未掌握知识点</div>
-                        <div class="text-xl font-bold">3个</div>
-                    </div>
-                </div>
-            </div>
+    <div class="lg:col-span-1 space-y-6">
 
             <!-- 资源推荐 -->
             <div class="bg-white rounded-xl p-6 card-shadow">
@@ -647,7 +971,6 @@
                 </div>
             </div>
         </div>
-    </div>
 </main>
 
 <!-- 页脚 -->
@@ -700,76 +1023,6 @@
 </div>
 
 <script>
-    // 初始状态：隐藏内容区域，清空预览文本
-    document.getElementById('知识讲解预览').textContent = '';
-    document.getElementById('实训练习预览').textContent = '';
-    document.getElementById('knowledgeSection').classList.add('hidden');
-    document.getElementById('practiceSection').classList.add('hidden');
-
-    function generateContent() {
-        // 生成知识讲解内容（示例数据，可替换为实际API请求或动态生成逻辑）
-        const knowledgeContent = `【知识讲解】
-
-1. 函数式编程基础概念
-   - 纯函数：相同输入总是返回相同输出，不产生副作用
-   - 不可变数据：避免数据被修改，提高代码安全性
-   - 一等公民函数：函数可以作为参数传递、返回值返回
-
-2. 高阶函数的使用
-   - 接收一个或多个函数作为参数
-   - 返回一个函数
-   - 常见高阶函数：sorted, filter, map
-
-3. 常用函数式编程工具
-   - map(func, iterable)：对可迭代对象中的每个元素应用函数
-   - filter(func, iterable)：过滤可迭代对象中的元素
-   - reduce(func, iterable[, initial])：累积计算可迭代对象中的元素`;
-
-        // 生成实训练习内容（示例数据，可替换为实际逻辑）
-        const practiceContent = `【实训练习】
-
-1. 编写一个函数，使用map和lambda函数将列表中的每个数字平方
-   - 输入：[1, 2, 3, 4, 5]
-   - 输出：[1, 4, 9, 16, 25]
-
-2. 使用filter函数过滤出列表中的所有偶数
-   - 输入：[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-   - 输出：[2, 4, 6, 8, 10]
-
-3. 使用reduce函数计算列表中所有元素的乘积
-   - 输入：[1, 2, 3, 4, 5]
-   - 输出：120
-
-4. 编写一个高阶函数，实现函数的缓存功能（Memoization）
-   - 提示：使用字典存储已经计算过的结果`;
-
-        // 更新页面显示
-        document.getElementById('知识讲解预览').textContent = knowledgeContent;
-        document.getElementById('实训练习预览').textContent = practiceContent;
-        document.getElementById('knowledgeSection').classList.remove('hidden');
-        document.getElementById('practiceSection').classList.remove('hidden');
-
-        // 可选：生成后自动聚焦编辑按钮或弹出提示
-        document.getElementById('editBtn').focus();
-        alert('内容生成成功！');
-    }
-
-    // 保持原有的弹窗逻辑（无需修改）
-    function openModal(type) {
-        const previewContent = document.getElementById(type + '预览').textContent;
-        document.getElementById(type + '编辑').value = previewContent;
-        document.getElementById(type + 'Modal').classList.remove('hidden');
-    }
-
-    function closeModal(type) {
-        document.getElementById(type + 'Modal').classList.add('hidden');
-    }
-
-    function saveContent(type) {
-        const editedContent = document.getElementById(type + '编辑').value;
-        document.getElementById(type + '预览').textContent = editedContent;
-        closeModal(type);
-    }
     // 智能上传和解析按钮模块
     const generateBtn = document.getElementById('generate-lesson');
     const outlineContent = document.getElementById('outline-content');
@@ -1032,163 +1285,6 @@
             }
         });
 
-        // 生成考核题目按钮
-        document.getElementById('generate-exam').addEventListener('click', function() {
-            // 显示加载状态
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40';
-            loadingIndicator.innerHTML = `
-                <div class="bg-white rounded-lg p-6 flex items-center">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mr-4"></div>
-                    <div>
-                        <h3 class="font-bold">正在生成考核题目</h3>
-                        <p class="text-gray-500 text-sm">根据备课内容，正在生成适合的考核题目...</p>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(loadingIndicator);
-
-            // 模拟API调用
-            setTimeout(() => {
-                const examType = document.getElementById('考核类型').value;
-                const examCount = document.getElementById('题目数量').value;
-
-                // 清空现有题目
-                const examList = document.getElementById('考核题目列表');
-                examList.innerHTML = '';
-
-                // 生成新题目
-                for (let i = 0; i < examCount; i++) {
-                    const questionDiv = document.createElement('div');
-                    questionDiv.className = 'bg-white p-4 rounded-lg border border-gray-200';
-
-                    if (examType === '编程题') {
-                        questionDiv.innerHTML = `
-                            <div class="flex items-start">
-                                <span class="font-medium mr-2">${i+1}.</span>
-                                <div>编写一个函数，${getRandomProgrammingQuestion()}</div>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-600">
-                                <div class="font-medium">测试用例:</div>
-                                <pre class="bg-gray-50 p-2 rounded mt-1 text-xs">${getRandomTestCases()}</pre>
-                            </div>
-                        `;
-                    } else {
-                        questionDiv.innerHTML = `
-                            <div class="flex items-start">
-                                <span class="font-medium mr-2">${i+1}.</span>
-                                <div>${getRandomMultipleChoiceQuestion()}</div>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-600">
-                                <div class="font-medium">答案解析:</div>
-                                <p class="bg-gray-50 p-2 rounded mt-1">${getRandomAnswerExplanation()}</p>
-                            </div>
-                        `;
-                    }
-
-                    examList.appendChild(questionDiv);
-                }
-
-                document.body.removeChild(loadingIndicator);
-                document.getElementById('modal-message').textContent = '考核题目生成成功！';
-                document.getElementById('modal').classList.remove('hidden');
-            }, 2000);
-        });
-
-        // 复制考核题目
-        document.getElementById('copy-exam').addEventListener('click', function() {
-            const examQuestions = document.getElementById('考核题目列表').innerText;
-            navigator.clipboard.writeText(examQuestions).then(function() {
-                document.getElementById('modal-message').textContent = '题目已复制到剪贴板！';
-                document.getElementById('modal').classList.remove('hidden');
-            }).catch(function(err) {
-                alert('复制失败，请手动复制');
-            });
-        });
-
-        // 初始化图表
-        function initCharts() {
-            // 班级正确率趋势图
-            const accuracyCtx = document.getElementById('accuracyChart').getContext('2d');
-            new Chart(accuracyCtx, {
-                type: 'line',
-                data: {
-                    labels: ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周'],
-                    datasets: [{
-                        label: '班级平均正确率',
-                        data: [75, 78, 82, 79, 85, 82.5],
-                        borderColor: '#165DFF',
-                        backgroundColor: 'rgba(22, 93, 255, 0.1)',
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 50,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 知识点掌握情况
-            const knowledgeCtx = document.getElementById('knowledgeChart').getContext('2d');
-            new Chart(knowledgeCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['函数基础', '高阶函数', 'map/filter', 'lambda', 'Memoization'],
-                    datasets: [{
-                        label: '掌握程度 (%)',
-                        data: [85, 72, 88, 65, 78],
-                        backgroundColor: [
-                            'rgba(22, 93, 255, 0.7)',
-                            'rgba(54, 207, 201, 0.7)',
-                            'rgba(82, 196, 26, 0.7)',
-                            'rgba(250, 173, 20, 0.7)',
-                            'rgba(255, 77, 79, 0.7)'
-                        ],
-                        borderWidth: 0,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         // 获取AI解析结果
         function getParseResult() {
             // 显示加载状态
@@ -1219,74 +1315,6 @@
             };
 
             xhr.send();
-        }
-
-        // 随机生成编程题目
-        function getRandomProgrammingQuestion() {
-            const questions = [
-                "实现一个函数，判断一个字符串是否是有效的括号序列",
-                "编写一个函数，将一个数组中的元素按升序排列",
-                "实现一个链表节点类，并编写函数反转链表",
-                "编写一个函数，计算两个整数的最大公约数",
-                "实现一个栈结构，支持push、pop和peek操作",
-                "编写一个函数，检查一个数是否是素数",
-                "实现一个二叉树节点类，并编写函数前序遍历二叉树",
-                "编写一个函数，将一个十进制数转换为二进制字符串",
-                "实现一个队列结构，支持enqueue和dequeue操作",
-                "编写一个函数，计算斐波那契数列的第n项"
-            ];
-            return questions[Math.floor(Math.random() * questions.length)];
-        }
-
-        // 随机生成测试用例
-        function getRandomTestCases() {
-            const testCases = [
-                "输入：s = \"()[]{}\"\n输出：true\n\n输入：s = \"(]\"\n输出：false\n\n输入：s = \"([)]\"\n输出：false",
-                "输入：nums = [5, 3, 8, 4, 2]\n输出：[2, 3, 4, 5, 8]\n\n输入：nums = [10, -2, 0, 5]\n输出：[-2, 0, 5, 10]",
-                "输入：1->2->3->4->5->NULL\n输出：5->4->3->2->1->NULL\n\n输入：NULL\n输出：NULL",
-                "输入：a = 24, b = 18\n输出：6\n\n输入：a = 49, b = 35\n输出：7",
-                "输入：push(1), push(2), pop(), push(3), peek()\n输出：2, 3\n\n输入：push(10), pop(), pop()\n输出：10, Error",
-                "输入：n = 7\n输出：true\n\n输入：n = 4\n输出：false\n\n输入：n = 1\n输出：false",
-                "输入：root = [1,null,2,3]\n输出：[1,2,3]\n\n输入：root = []\n输出：[]",
-                "输入：n = 13\n输出：\"1101\"\n\n输入：n = 0\n输出：\"0\"",
-                "输入：enqueue(1), enqueue(2), dequeue(), enqueue(3), dequeue()\n输出：1, 2\n\n输入：dequeue(), enqueue(5)\n输出：Error, 5",
-                "输入：n = 5\n输出：5\n\n输入：n = 10\n输出：55\n\n输入：n = 0\n输出：0"
-            ];
-            return testCases[Math.floor(Math.random() * testCases.length)];
-        }
-
-        // 随机生成选择题
-        function getRandomMultipleChoiceQuestion() {
-            const questions = [
-                "以下哪个是Python中的不可变数据类型？\nA. 列表\nB. 字典\nC. 集合\nD. 元组",
-                "在Python中，哪个关键字用于定义一个函数？\nA. function\nB. def\nC. define\nD. func",
-                "Python中的lambda函数是什么？\nA. 一种特殊的函数定义语法\nB. 一种匿名函数\nC. 一种递归函数\nD. 一种高阶函数",
-                "以下哪个是Python中的内置高阶函数？\nA. map()\nB. filter()\nC. reduce()\nD. 以上都是",
-                "在Python中，哪个方法用于从列表中删除最后一个元素并返回它？\nA. remove()\nB. pop()\nC. delete()\nD. discard()",
-                "以下哪个是Python中的异常处理关键字？\nA. try\nB. catch\nC. except\nD. A和C",
-                "Python中的列表推导式的语法是什么？\nA. [x for x in iterable if condition]\nB. {x: x*2 for x in iterable}\nC. (x for x in iterable)\nD. 以上都是",
-                "在Python中，哪个模块提供了正则表达式支持？\nA. regex\nB. re\nC. regular\nD. expressions",
-                "Python中的装饰器是什么？\nA. 一种特殊的函数\nB. 一种设计模式\nC. 一种语法糖\nD. 以上都是",
-                "以下哪个是Python中的文件操作模式？\nA. 'r'\nB. 'w'\nC. 'a'\nD. 以上都是"
-            ];
-            return questions[Math.floor(Math.random() * questions.length)];
-        }
-
-        // 随机生成答案解析
-        function getRandomAnswerExplanation() {
-            const explanations = [
-                "正确答案：D\n\n解析：元组是Python中的不可变数据类型，一旦创建就不能修改。列表、字典和集合都是可变数据类型。",
-                "正确答案：B\n\n解析：在Python中，使用def关键字来定义函数。function是JavaScript中定义函数的关键字，define和func在Python中没有特殊意义。",
-                "正确答案：B\n\n解析：lambda函数是Python中的匿名函数，它可以在需要函数对象的地方内联定义。虽然lambda函数可以作为高阶函数的参数，但它本身并不是高阶函数。",
-                "正确答案：D\n\n解析：map()、filter()和reduce()都是Python中的内置高阶函数。map()对可迭代对象的每个元素应用函数，filter()过滤元素，reduce()累积计算元素。",
-                "正确答案：B\n\n解析：pop()方法用于从列表中删除最后一个元素并返回它。remove()方法删除指定值的第一个匹配项，delete不是列表的方法，discard是集合的方法。",
-                "正确答案：D\n\n解析：在Python中，使用try和except关键字进行异常处理。try块包含可能引发异常的代码，except块处理异常。catch是Java等语言中使用的关键字。",
-                "正确答案：A\n\n解析：列表推导式的语法是[x for x in iterable if condition]。选项B是字典推导式的语法，选项C是生成器表达式的语法。",
-                "正确答案：B\n\n解析：Python中的re模块提供了正则表达式支持。没有regex、regular或expressions这样的内置模块。",
-                "正确答案：D\n\n解析：装饰器是Python中的一种特殊函数，它可以接受一个函数作为参数，并返回一个新的函数。装饰器是一种设计模式，也是一种语法糖，用于简化函数或类的包装。",
-                "正确答案：D\n\n解析：'r'表示读取模式，'w'表示写入模式，'a'表示追加模式。这些都是Python中常用的文件操作模式。"
-            ];
-            return explanations[Math.floor(Math.random() * explanations.length)];
         }
     });
 </script>
